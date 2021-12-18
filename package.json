@@ -5,7 +5,8 @@
   "main": "app.js",
   "scripts": {
     "start": "nodemon server.js",
-    "prod": "NODE_ENV=Production nodemon server.js"
+    "prod": "NODE_ENV=Production nodemon server.js",
+    "dbug": "ndb server.js"
   },
   "author": "Anmol Noor",
   "license": "ISC",
