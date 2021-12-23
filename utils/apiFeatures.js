@@ -3,6 +3,7 @@ class APIFeatures {
     this.query = query;
     this.queryStr = queryStr;
   }
+
   filter() {
     // 1A) Filtering
     const queryObj = { ...this.queryStr };
@@ -19,6 +20,7 @@ class APIFeatures {
 
     return this;
   }
+
   sort() {
     // 2) Sorting
     if (this.queryStr.sort) {
@@ -29,6 +31,7 @@ class APIFeatures {
     }
     return this;
   }
+
   limitFields() {
     // 3) limiting the fields
     if (this.queryStr.fields) {
@@ -41,6 +44,7 @@ class APIFeatures {
 
     return this;
   }
+
   pagination() {
     // 4) Pagination
     const page = this.queryStr.page * 1 || 1;
