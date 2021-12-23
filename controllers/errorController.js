@@ -13,15 +13,18 @@ const handleDuplicatFieldsDB = (err) => {
 };
 
 const handleValidationError = (err) => {
-  console.log('====================================');
-  console.log(err);
-  console.log('====================================');
   const errors = Object.values(err.errors).map((el) => el.message);
 
   const message = `Invalid Input Data. ${errors.join('. ')} `;
 
   return new AppError(message, 400);
 };
+
+const handleJsonWebToken = () =>
+  new AppError('Invalid Token. Please Login Again!!!', 401);
+
+const handleTokenExpired = () =>
+  new AppError('Token expired. Please Login Again!!!', 401);
 
 const sendErrorProd = (err, res) => {
   // oprational trusted error by api
@@ -34,6 +37,7 @@ const sendErrorProd = (err, res) => {
     // non-oprational untrusted error by programming, thirdPartyLibrary or unhandler
 
     // 1) log err
+    // eslint-disable-next-line no-console
     console.error('@@--ERROR--@@', err);
     // 2) send generic message
     res.status(500).json({
@@ -56,13 +60,14 @@ module.exports = (err, req, res, next) => {
   err.status = err.status || 'fail';
   if (process.env.NODE_ENV === 'development') {
     sendErrorDev(err, res);
-  } else if (process.env.NODE_ENV === 'Production') {
+  } else if (process.env.NODE_ENV === 'production') {
     let errN = { ...err };
     if (err.name === 'CastError') errN = handleCastErrorDB(err);
     if (err.code === 11000) errN = handleDuplicatFieldsDB(err);
     if (err.name === 'ValidationError') errN = handleValidationError(err);
+    if (err.name === 'JsonWebTokenError') errN = handleJsonWebToken();
+    if (err.name === 'TokenExpiredError') errN = handleTokenExpired();
 
     sendErrorProd(errN, res);
   }
-  //   next();
 };

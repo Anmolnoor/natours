@@ -1,7 +1,13 @@
 const express = require('express');
 const morgan = require('morgan');
 const dotenv = require('dotenv');
+const rateLimit = require('express-rate-limit');
+const helmet = require('helmet');
+const mongoSanitize = require('express-mongo-sanitize');
+const xss = require('xss-clean');
+const hpp = require('hpp');
 
+//  ---   env   ---
 dotenv.config({ path: './config.env' });
 
 //  ---  Controller  ---
@@ -16,19 +22,62 @@ const routeUsers = require('./routes/userRoutes');
 
 const app = express();
 
-//  ---  middleware  ---
+//  ---  Global-middleware  ---
+
+// Set Security HTTP Headers
+app.use(helmet());
+
+// Development Logging
 if (process.env.NODE_ENV === 'development') {
   app.use(morgan('dev'));
 }
-app.use(express.json());
+
+// Limiting request from same IP
+const limiter = rateLimit({
+  max: 100,
+  windowMs: 60 * 60 * 1000,
+  message: 'Too many request from this IP, Please try again in an Hour!',
+});
+app.use('/api', limiter);
+
+// Body parser and reading data from the body into req.body
+app.use(express.json({ limit: '10kb' }));
+
+// Data Sanitization against the NoSql query injection
+app.use(mongoSanitize());
+
+// Data Sanitization against XSS
+app.use(xss());
+
+// Prevent Perameter Pollution
+app.use(
+  hpp({
+    whitelist: [
+      'duration',
+      'ratingsQuantity',
+      'ratingsAverage',
+      'maxGroupSize',
+      'difficulty',
+      'price',
+    ],
+  })
+);
+
+// Serving Static files
 app.use(express.static(`${__dirname}/public`));
+
+// test Middleware
 app.use((req, res, next) => {
-  console.log('Hello from the server!!!');
+  req.requestTime = new Date().toISOString();
+  console.log('Hello from the server!!!'); // eslint-disable-line no-console
   next();
 });
+
+//  ---   Routes   ---
 app.use('/api/v1/tours', routeTours);
 app.use('/api/v1/users', routeUsers);
 
+//  ---   error Handling ---
 app.all('*', (req, res, next) => {
   // res.status(404).json({
   //   status: 'fail',
@@ -39,6 +88,7 @@ app.all('*', (req, res, next) => {
   // err.status = 'fail';
   next(new AppError(`can't find ${req.originalUrl} on this server`, 404));
 });
-
 app.use(globalErrorHandler);
+
+//  ---   Exports   ---
 module.exports = app;
