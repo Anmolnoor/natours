@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 const slugify = require('slugify');
+// const User = require('./userModel');
 
 const tourSchema = new mongoose.Schema(
   {
@@ -74,6 +75,37 @@ const tourSchema = new mongoose.Schema(
       default: false,
     },
     startDates: [Date],
+    startLocation: {
+      // GeoJSON
+      type: {
+        type: String,
+        default: 'Point',
+        enum: ['Point'],
+      },
+      coordinates: [Number],
+      address: String,
+      discription: String,
+    },
+    locations: [
+      {
+        type: {
+          type: String,
+          default: 'Point',
+          enum: ['Point'],
+        },
+        coordinates: [Number],
+        address: String,
+        discription: String,
+        day: Number,
+      },
+    ],
+    // guides: Array, this is for the embeded Approch
+    guides: [
+      {
+        type: mongoose.Schema.ObjectId,
+        ref: 'Users',
+      },
+    ],
   },
   {
     toJSON: { virtuals: true },
@@ -81,8 +113,21 @@ const tourSchema = new mongoose.Schema(
   }
 );
 
+//  db indexing for better query result or a faster result
+
+tourSchema.index({ price: 1, ratingsAverage: -1 });
+tourSchema.index({ slug: 1 });
+tourSchema.index({ startLocation: '2dsphere' });
+// Virtuel data
+
 tourSchema.virtual('durationWeeks').get(function () {
   return this.duration / 7;
+});
+
+tourSchema.virtual('reviews', {
+  ref: 'Reviews',
+  foreignField: 'tour',
+  localField: '_id',
 });
 
 //  Doc Middleware ---
@@ -91,6 +136,17 @@ tourSchema.pre('save', function (next) {
   this.slug = slugify(this.name, { lower: true });
   next();
 });
+
+// embedded the users from the user model to tour model to store the user(Guide details) in it.
+//  it is very difficult to update the data if the user(guide) update the email or any other details
+// So we are here using the referancing approch for this problem.
+
+// tourSchema.pre('save', async function (next) {
+//   const guidePromises = this.guides.map(async (id) => await User.findById(id));
+//   this.guides = await Promise.all(guidePromises);
+
+//   next();
+// });
 
 // tourSchema.post('save', function (doc, next) {
 //   // console.log(doc);
@@ -105,6 +161,14 @@ tourSchema.pre(/^find/, function (next) {
   next();
 });
 
+tourSchema.pre(/^find/, function (next) {
+  this.populate({
+    path: 'guides',
+    select: '-__v -passwordChangedAT',
+  });
+  next();
+});
+
 tourSchema.post(/^find/, function (docs, next) {
   // eslint-disable-next-line no-console
   console.log(`the ^find Query took ${Date.now() - this.start} milliseconds`);
@@ -114,12 +178,12 @@ tourSchema.post(/^find/, function (docs, next) {
 
 // Aggregation middleware
 
-tourSchema.pre('aggregate', function (next) {
-  this.pipeline().unshift({ $match: { secretTour: { $ne: true } } });
-  // eslint-disable-next-line no-console
-  console.log(this);
-  next();
-});
+// tourSchema.pre('aggregate', function (next) {
+//   this.pipeline().unshift({ $match: { secretTour: { $ne: true } } });
+//   // eslint-disable-next-line no-console
+//   console.log(this);
+//   next();
+// });
 
 const Tour = mongoose.model('Tour', tourSchema);
 

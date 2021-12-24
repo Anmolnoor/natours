@@ -19,6 +19,7 @@ const AppError = require('./utils/appError');
 //  ---  Mount router  ---
 const routeTours = require('./routes/tourRoutes');
 const routeUsers = require('./routes/userRoutes');
+const routeReview = require('./routes/reviewRoutes');
 
 const app = express();
 
@@ -76,6 +77,7 @@ app.use((req, res, next) => {
 //  ---   Routes   ---
 app.use('/api/v1/tours', routeTours);
 app.use('/api/v1/users', routeUsers);
+app.use('/api/v1/reviews', routeReview);
 
 //  ---   error Handling ---
 app.all('*', (req, res, next) => {
