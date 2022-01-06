@@ -6,11 +6,14 @@
   "scripts": {
     "start": "nodemon server.js",
     "prod": "NODE_ENV=production nodemon server.js",
-    "dbug": "ndb server.js"
+    "dbug": "ndb server.js",
+    "watch:js": "parcel watch ./public/js/index.js --out-dir ./public/js --out-file bundle.js",
+    "build:js": "parcel watch ./public/js/index.js --out-dir ./public/js --out-file bundle.js"
   },
   "author": "Anmol Noor",
   "license": "ISC",
   "dependencies": {
+    "axios": "^0.24.0",
     "bcryptjs": "^2.4.3",
     "dotenv": "^10.0.0",
     "express": "^4.17.1",
@@ -22,6 +25,8 @@
     "mongoose": "^6.1.1",
     "morgan": "^1.10.0",
     "nodemailer": "^6.7.2",
+    "parcel-bundler": "^1.12.5",
+    "pug": "^3.0.2",
     "slugify": "^1.6.4",
     "validator": "^13.7.0",
     "xss-clean": "^0.1.1"

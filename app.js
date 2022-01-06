@@ -1,4 +1,5 @@
 const express = require('express');
+const path = require('path');
 const morgan = require('morgan');
 const dotenv = require('dotenv');
 const rateLimit = require('express-rate-limit');
@@ -20,10 +21,17 @@ const AppError = require('./utils/appError');
 const routeTours = require('./routes/tourRoutes');
 const routeUsers = require('./routes/userRoutes');
 const routeReview = require('./routes/reviewRoutes');
+const viewRoute = require('./routes/viewRoute');
 
 const app = express();
 
+app.set('view engine', 'pug');
+app.set('views', path.join(__dirname, 'views'));
+
 //  ---  Global-middleware  ---
+
+// Serving Static files
+app.use(express.static(path.join(__dirname, 'public')));
 
 // Set Security HTTP Headers
 app.use(helmet());
@@ -64,9 +72,6 @@ app.use(
   })
 );
 
-// Serving Static files
-app.use(express.static(`${__dirname}/public`));
-
 // test Middleware
 app.use((req, res, next) => {
   req.requestTime = new Date().toISOString();
@@ -75,6 +80,7 @@ app.use((req, res, next) => {
 });
 
 //  ---   Routes   ---
+app.use('/', viewRoute);
 app.use('/api/v1/tours', routeTours);
 app.use('/api/v1/users', routeUsers);
 app.use('/api/v1/reviews', routeReview);
