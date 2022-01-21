@@ -1,4 +1,5 @@
 const express = require('express');
+
 const userController = require('../controllers/userController');
 const authController = require('../controllers/authController');
 
@@ -16,7 +17,12 @@ routes.route('/me').get(userController.getMe, userController.getUser);
 
 routes.patch('/updatePassword', authController.updatePassword);
 
-routes.patch('/updateMe', userController.updateMe);
+routes.patch(
+  '/updateMe',
+  userController.uploadUserPhoto,
+  userController.resixeUserPhoto,
+  userController.updateMe
+);
 routes.delete('/deleteMe', userController.deleteMe);
 
 // to ristrict to all routes after this middleware
